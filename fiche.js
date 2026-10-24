@@ -49,6 +49,7 @@
     for (var k = 0; k < enfants.length; k++) {
       var n = enfants[k];
       if (n === bouton) continue;
+      if (n.nodeType === 1 && n.id === 'bouton-retour') continue;
       if (n === debut) dedans = true;
       if (n === hrApres) dedans = false;
       if (!dedans) {
