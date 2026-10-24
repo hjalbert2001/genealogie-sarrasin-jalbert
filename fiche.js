@@ -1,7 +1,10 @@
 /* Fiche unique : quand on ouvre une page de fiches (dat*.htm) avec une ancre
    (ex. dat20.htm#13), n'afficher que la fiche demandee.
    Un bouton "Voir toute la page" permet de revenir a la page complete.
-   Sans ancre, ou si l'ancre est introuvable, la page s'affiche normalement. */
+   Sans ancre, ou si l'ancre est introuvable, la page s'affiche normalement.
+   GARDE-FOU : si la structure de la page n'est pas exactement celle attendue
+   (separateurs et fiche enfants directs du body), on ne masque rien du tout :
+   une page complete vaut mieux qu'une page vide. */
 (function () {
   function isoler() {
     var hash = window.location.hash;
@@ -23,7 +26,13 @@
         break;
       }
     }
-    var ref = hrAvant || ancre;
+    // Garde-fou : si l'ancre ou l'un des separateurs est imbrique dans un
+    // autre element (ex. un <blockquote> reste ouvert), la page s'affiche
+    // complete, sans rien masquer.
+    if (ancre.parentNode !== corps) return;
+    if (hrAvant !== null && hrAvant.parentNode !== corps) return;
+    if (hrApres !== null && hrApres.parentNode !== corps) return;
+    var debut = hrAvant || ancre;
     // Bouton pour revoir toute la page, juste au-dessus de la fiche.
     var bouton = document.createElement('button');
     bouton.type = 'button';
@@ -32,15 +41,15 @@
     bouton.onclick = function () {
       window.location.href = window.location.href.split('#')[0];
     };
-    ref.parentNode.insertBefore(bouton, ref);
-    // Cacher tout ce qui est hors de l'intervalle [hrAvant, hrApres).
+    debut.parentNode.insertBefore(bouton, debut);
+    // Cacher tout ce qui est hors de l'intervalle [debut, hrApres).
     var enfants = [];
     for (var j = 0; j < corps.childNodes.length; j++) enfants.push(corps.childNodes[j]);
     var dedans = false;
     for (var k = 0; k < enfants.length; k++) {
       var n = enfants[k];
       if (n === bouton) continue;
-      if (n === hrAvant) dedans = true;
+      if (n === debut) dedans = true;
       if (n === hrApres) dedans = false;
       if (!dedans) {
         if (n.nodeType === 1) {
